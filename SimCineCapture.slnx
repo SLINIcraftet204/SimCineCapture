@@ -1,0 +1,18 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="SimCineCapture.Capture/SimCineCapture.Capture.csproj" Id="14a2de60-1df3-4755-bf72-79ce2337ab37">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SimCineCapture.Core/SimCineCapture.Core.csproj" Id="05654fed-c2f7-4bff-8fe7-21171915dfcf">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SimCineCapture.SimConnect/SimCineCapture.SimConnect.csproj" Id="2763746d-c11b-4f0a-890e-8b5e6b622c15">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SimCineCapture.UI/SimCineCapture.UI.csproj" Id="2f1d5a90-745a-4878-bdef-73a6d68eb539">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
