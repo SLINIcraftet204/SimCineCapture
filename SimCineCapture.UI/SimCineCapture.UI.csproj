@@ -54,7 +54,7 @@
 </ItemGroup>
 
 <ItemGroup>
-  <None Include="C:\MSFS SDK\SimConnect SDK\lib\SimConnect.dll">
+  <None Include="..\SimCineCapture.SimConnect\3rdparty\SimConnect.dll">
     <Link>SimConnect.dll</Link>
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
