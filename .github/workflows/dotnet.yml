@@ -21,8 +21,8 @@ jobs:
         dotnet-version: 10.0.x
 
     - name: Restore dependencies
-      run: dotnet restore SimCineCapture.sln
+      run: dotnet restore SimCineCapture.slnx
     - name: Build
-      run: dotnet build SimCineCapture.sln --configuration Release --no-restore
+      run: dotnet build SimCineCapture.slnx --configuration Release --no-restore
     # - name: Test
-    #   run: dotnet test SimCineCapture.sln --configuration Release --no-build --verbosity normal
+    #   run: dotnet test SimCineCapture.slnx --configuration Release --no-build --verbosity normal
