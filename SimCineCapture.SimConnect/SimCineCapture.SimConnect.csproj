@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.FlightSimulator.SimConnect">
-      <HintPath>C:\MSFS SDK\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll</HintPath>
+      <HintPath>3rdparty\Microsoft.FlightSimulator.SimConnect.dll</HintPath>
 	  <Private>true</Private>
 	  <SpecificVersion>false</SpecificVersion>
     </Reference>
