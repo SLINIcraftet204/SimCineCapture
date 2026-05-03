@@ -1,11 +1,12 @@
-﻿using SimCineCapture.Core.Abstractions;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using SimCineCapture.Core.Abstractions;
 using SimCineCapture.Core.Enums;
 using SimCineCapture.Core.Models;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using System.Text;
 
 namespace SimCineCapture.Capture.Services
 {
@@ -13,6 +14,8 @@ namespace SimCineCapture.Capture.Services
     {
         private readonly object _sync = new();
         private readonly ICaptureBackend _captureBackend;
+        private readonly ISequenceVideoEncoder _sequenceVideoEncoder;
+        private readonly IOptions<AppSettings> _appSettings;
         private readonly ILogger<RecorderService> _logger;
 
         private RecorderStatus _status = new()
@@ -23,9 +26,13 @@ namespace SimCineCapture.Capture.Services
 
         public RecorderService(
             ICaptureBackend captureBackend,
+            ISequenceVideoEncoder sequenceVideoEncoder,
+            IOptions<AppSettings> appSettings,
             ILogger<RecorderService> logger)
         {
             _captureBackend = captureBackend;
+            _sequenceVideoEncoder = sequenceVideoEncoder;
+            _appSettings = appSettings;
             _logger = logger;
         }
 
@@ -99,7 +106,7 @@ namespace SimCineCapture.Capture.Services
                     _status = new RecorderStatus
                     {
                         State = RecorderState.Recording,
-                        Message = "Recording started (FFmpeg MP4 pipeline active).",
+                        Message = "Recording started (PNG sequence capture active).",
                         OutputFilePath = fullPath,
                         StartedAtUtc = DateTimeOffset.UtcNow
                     };
@@ -167,15 +174,55 @@ namespace SimCineCapture.Capture.Services
             {
                 await _captureBackend.StopCaptureAsync(cancellationToken);
 
-                lock (_sync)
+                var frameSinkMode = _appSettings.Value.Recorder.FrameSink?.Trim().ToLowerInvariant();
+
+                if (frameSinkMode == "ffmpeg" && !string.IsNullOrWhiteSpace(outputFilePath))
                 {
-                    _status = new RecorderStatus
+                    lock (_sync)
                     {
-                        State = RecorderState.Idle,
-                        Message = "Recording stopped.",
+                        _status = new RecorderStatus
+                        {
+                            State = RecorderState.Stopping,
+                            Message = "Encoding MP4 with FFmpeg...",
+                            OutputFilePath = outputFilePath,
+                            StartedAtUtc = startedAtUtc
+                        };
+                    }
+
+                    RaiseStatusChanged();
+
+                    var framesDirectory = BuildFramesDirectoryPath(outputFilePath);
+
+                    await _sequenceVideoEncoder.EncodeAsync(new SequenceVideoEncodingRequest
+                    {
+                        InputFramesDirectory = framesDirectory,
                         OutputFilePath = outputFilePath,
-                        StartedAtUtc = startedAtUtc
-                    };
+                        TargetFrameRate = Math.Max(1, _appSettings.Value.Recorder.TargetFrameRate)
+                    }, cancellationToken);
+
+                    lock (_sync)
+                    {
+                        _status = new RecorderStatus
+                        {
+                            State = RecorderState.Idle,
+                            Message = "Recording stopped and MP4 encoded successfully.",
+                            OutputFilePath = outputFilePath,
+                            StartedAtUtc = startedAtUtc
+                        };
+                    }
+                }
+                else
+                {
+                    lock (_sync)
+                    {
+                        _status = new RecorderStatus
+                        {
+                            State = RecorderState.Idle,
+                            Message = "Recording stopped. PNG frame sequence saved.",
+                            OutputFilePath = outputFilePath,
+                            StartedAtUtc = startedAtUtc
+                        };
+                    }
                 }
 
                 _logger.LogInformation("Recording stopped. Output: {OutputFilePath}", outputFilePath);
@@ -244,6 +291,19 @@ namespace SimCineCapture.Capture.Services
                 .ToArray());
 
             return sanitized.Trim();
+        }
+
+        private static string BuildFramesDirectoryPath(string outputFilePath)
+        {
+            var parentDirectory = Path.GetDirectoryName(outputFilePath);
+
+            if (string.IsNullOrWhiteSpace(parentDirectory))
+            {
+                throw new InvalidOperationException("Unable to determine frame sequence directory.");
+            }
+
+            var baseName = Path.GetFileNameWithoutExtension(outputFilePath);
+            return Path.Combine(parentDirectory, $"{baseName}_frames");
         }
     }
 }

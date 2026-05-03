@@ -37,9 +37,8 @@ public partial class App : System.Windows.Application
                 services.AddSingleton<DesktopDuplicationCaptureBackend>();
 
                 services.AddTransient<PngSequenceFrameSink>();
-                services.AddTransient<FfmpegProcessFrameSink>();
-
                 services.AddSingleton<IRecordingFrameSinkFactory, ConfiguredRecordingFrameSinkFactory>();
+                services.AddSingleton<ISequenceVideoEncoder, FfmpegImageSequenceVideoEncoder>();
 
                 services.AddSingleton<ICaptureBackend>(sp =>
                 {

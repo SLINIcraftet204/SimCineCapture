@@ -11,27 +11,15 @@ namespace SimCineCapture.Capture.Services
     public sealed class ConfiguredRecordingFrameSinkFactory : IRecordingFrameSinkFactory
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IOptions<AppSettings> _appSettings;
 
-        public ConfiguredRecordingFrameSinkFactory(
-            IServiceProvider serviceProvider,
-            IOptions<AppSettings> appSettings)
+        public ConfiguredRecordingFrameSinkFactory(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _appSettings = appSettings;
         }
 
         public IRecordingFrameSink Create()
         {
-            var frameSink = _appSettings.Value.Recorder.FrameSink?.Trim().ToLowerInvariant();
-
-            return frameSink switch
-            {
-                "png" => _serviceProvider.GetRequiredService<PngSequenceFrameSink>(),
-                "pngsequence" => _serviceProvider.GetRequiredService<PngSequenceFrameSink>(),
-                "png-sequence" => _serviceProvider.GetRequiredService<PngSequenceFrameSink>(),
-                _ => _serviceProvider.GetRequiredService<FfmpegProcessFrameSink>()
-            };
+            return _serviceProvider.GetRequiredService<PngSequenceFrameSink>();
         }
     }
 }
